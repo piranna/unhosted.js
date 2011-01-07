@@ -222,7 +222,6 @@ new function() {
         });
     }
     this.get = function(nick, keyPath) { // execute a UJ/0.1 GET command
-        checkNick(nick);
         var ret = that.rawGet(nick, keyPath);
         if (ret==null) {
             return null;
