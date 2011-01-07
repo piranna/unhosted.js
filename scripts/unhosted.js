@@ -221,9 +221,11 @@ new function() {
             }
         });
     }
-    this.get = function(nick, keyPath) { // execute a UJ/0.1 GET command
-        var ret = that.rawGet(nick, keyPath);
+    this.get = function(nick, keyPath, value) { // execute a UJ/0.1 GET command
+        var ret = that.rawGet(nick, keyPath, value);
         if (ret==null) {
+            if (value!=undefined)
+                return value;
             return null;
         }
         var cmdStr = JSON.stringify(ret.cmd).replace("+", "%2B");
