@@ -222,19 +222,35 @@ new function() {
         });
     }
     this.get = function(nick, keyPath, value) { // execute a UJ/0.1 GET command
-        var ret = that.rawGet(nick, keyPath, value);
-        if (ret==null) {
-            if (value!=undefined)
-                return value;
-            return null;
+        function Get(keyPath,value)
+        {
+	        var ret = that.rawGet(nick, keyPath, value);
+	        if (ret==null) {
+	            if (value!=undefined)
+	                return value;
+	            return null;
+	        }
+	        var cmdStr = JSON.stringify(ret.cmd).replace("+", "%2B");
+	        var sig = ret.PubSign;
+	        if (checkPubSign(cmdStr, sig, keys[nick].n) == true) {
+	            return JSON.parse(byteArrayToString(rijndaelDecrypt(hexToByteArray(ret.cmd.value), hexToByteArray(keys[nick].s), 'ECB')));
+	        } else {
+	            return "ERROR - PubSign "+sig+" does not correctly sign "+cmdStr+" for key "+keys[nick].n;
+	        }
         }
-        var cmdStr = JSON.stringify(ret.cmd).replace("+", "%2B");
-        var sig = ret.PubSign;
-        if (checkPubSign(cmdStr, sig, keys[nick].n) == true) {
-            return JSON.parse(byteArrayToString(rijndaelDecrypt(hexToByteArray(ret.cmd.value), hexToByteArray(keys[nick].s), 'ECB')));
-        } else {
-            return "ERROR - PubSign "+sig+" does not correctly sign "+cmdStr+" for key "+keys[nick].n;
-        }
+
+    	if(keyPath instanceof Array)
+    	{
+    		var ret = Array();
+    		for(var k in keyPath)
+    			if(value instanceof Array)
+    				ret[k] = Get(keyPath[k],value[k]);
+    			else
+    				ret[k] = Get(keyPath[k],value);
+    		return ret;
+    	}
+    	else
+    		return Get(keyPath,value);
     }
     this.rawSet = function(nick, keyPath, value, useN, callback) {
         checkNick(nick);
